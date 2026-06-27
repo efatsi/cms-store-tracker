@@ -29,7 +29,7 @@
 
   <body class="min-h-screen" style="background-color: #f4ede0;">
     <nav style="background-color: #537326;" class="text-white shadow-md">
-      <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <a href="/" class="flex items-center gap-3">
           <span class="text-2xl serif font-bold tracking-wide">Camp Mont Shenandoah</span>
           <span class="text-stone-400 text-sm font-light tracking-widest uppercase">Store</span>
@@ -38,17 +38,17 @@
     </nav>
 
     <% if notice %>
-      <div class="max-w-5xl mx-auto mt-4 px-6">
+      <div class="max-w-7xl mx-auto mt-4 px-6">
         <div class="bg-green-50 border border-green-300 text-green-800 px-4 py-3 rounded-sm text-sm"><%= notice %></div>
       </div>
     <% end %>
     <% if alert %>
-      <div class="max-w-5xl mx-auto mt-4 px-6">
+      <div class="max-w-7xl mx-auto mt-4 px-6">
         <div class="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-sm text-sm"><%= alert %></div>
       </div>
     <% end %>
 
-    <main class="max-w-5xl mx-auto px-6 py-8">
+    <main class="max-w-7xl mx-auto px-6 py-8">
       <%= yield %>
     </main>
 

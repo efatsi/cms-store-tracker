@@ -1,15 +1,5 @@
-# Sample data: 2 test campers and 2 test products
+# Seed sample products
 # Run with: bin/rails db:seed
-
-puts "Seeding campers..."
-
-Camper.find_or_create_by!(name: "Alice Johnson") do |c|
-  c.balance = 150.00
-end
-
-Camper.find_or_create_by!(name: "Bob Smith") do |c|
-  c.balance = 150.00
-end
 
 puts "Seeding products..."
 

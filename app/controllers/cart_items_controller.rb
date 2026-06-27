@@ -12,7 +12,7 @@ class CartItemsController < ApplicationController
       @cart.cart_items.create!(product: product, quantity: 1)
     end
 
-    redirect_to camper_path(@camper), notice: "#{product.name} added to cart."
+    redirect_to camper_path(@camper)
   end
 
   def update
@@ -37,7 +37,7 @@ class CartItemsController < ApplicationController
     cart_item = @cart.cart_items.find(params[:id])
     cart_item.destroy
 
-    redirect_to camper_path(@camper), notice: "Item removed from cart."
+    redirect_to camper_path(@camper)
   end
 
   private

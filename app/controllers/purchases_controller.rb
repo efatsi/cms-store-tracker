@@ -12,11 +12,6 @@ class PurchasesController < ApplicationController
 
     total = cart_items.sum { |item| item.product.price * item.quantity }
 
-    if total > @camper.balance
-      redirect_to camper_path(@camper), alert: "Insufficient balance. Total is $#{sprintf('%.2f', total)} but balance is $#{sprintf('%.2f', @camper.balance)}."
-      return
-    end
-
     ActiveRecord::Base.transaction do
       cart_items.each do |item|
         product = item.product
