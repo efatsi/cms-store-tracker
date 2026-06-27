@@ -11,7 +11,9 @@ Rails.application.routes.draw do
 
   root "campers#index"
 
-  resources :campers, only: [:index, :show] do
+  get "/api/data", to: "api#data"
+
+  resources :campers, only: [] do
     resources :cart_items, only: [:create, :update, :destroy]
     resources :purchases, only: [:create]
   end

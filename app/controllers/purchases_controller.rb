@@ -6,7 +6,10 @@ class PurchasesController < ApplicationController
     cart_items = @cart.cart_items.includes(:product)
 
     if cart_items.empty?
-      redirect_to camper_path(@camper), alert: "Your cart is empty."
+      respond_to do |format|
+        format.html { redirect_to root_path, alert: "Your cart is empty." }
+        format.json { render json: { error: "Cart is empty" }, status: :unprocessable_entity }
+      end
       return
     end
 
@@ -29,9 +32,15 @@ class PurchasesController < ApplicationController
       @cart.cart_items.destroy_all
     end
 
-    redirect_to camper_path(@camper), notice: "Checkout complete! $#{sprintf('%.2f', total)} charged."
+    respond_to do |format|
+      format.html { redirect_to root_path }
+      format.json { render json: { ok: true, total: total.to_f } }
+    end
   rescue => e
-    redirect_to camper_path(@camper), alert: "Checkout failed: #{e.message}"
+    respond_to do |format|
+      format.html { redirect_to root_path, alert: "Checkout failed: #{e.message}" }
+      format.json { render json: { error: e.message }, status: :unprocessable_entity }
+    end
   end
 
   private

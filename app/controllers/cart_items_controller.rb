@@ -12,7 +12,10 @@ class CartItemsController < ApplicationController
       @cart.cart_items.create!(product: product, quantity: 1)
     end
 
-    redirect_to camper_path(@camper)
+    respond_to do |format|
+      format.html { redirect_to root_path }
+      format.json { head :ok }
+    end
   end
 
   def update
@@ -29,7 +32,10 @@ class CartItemsController < ApplicationController
       end
     end
 
-    redirect_to camper_path(@camper)
+    respond_to do |format|
+      format.html { redirect_to root_path }
+      format.json { head :ok }
+    end
   end
 
   def destroy
@@ -37,7 +43,10 @@ class CartItemsController < ApplicationController
     cart_item = @cart.cart_items.find(params[:id])
     cart_item.destroy
 
-    redirect_to camper_path(@camper)
+    respond_to do |format|
+      format.html { redirect_to root_path }
+      format.json { head :ok }
+    end
   end
 
   private
