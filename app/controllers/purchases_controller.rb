@@ -6,10 +6,7 @@ class PurchasesController < ApplicationController
     cart_items = @cart.cart_items.includes(:product)
 
     if cart_items.empty?
-      respond_to do |format|
-        format.html { redirect_to root_path, alert: "Your cart is empty." }
-        format.json { render json: { error: "Cart is empty" }, status: :unprocessable_entity }
-      end
+      redirect_to camper_path(@camper), alert: "Your cart is empty."
       return
     end
 
@@ -18,8 +15,6 @@ class PurchasesController < ApplicationController
     ActiveRecord::Base.transaction do
       cart_items.each do |item|
         product = item.product
-        raise ActiveRecord::Rollback, "#{product.name} is out of stock." if product.quantity < item.quantity
-
         @camper.purchases.create!(
           product: product,
           quantity: item.quantity,
@@ -32,15 +27,21 @@ class PurchasesController < ApplicationController
       @cart.cart_items.destroy_all
     end
 
-    respond_to do |format|
-      format.html { redirect_to root_path }
-      format.json { render json: { ok: true, total: total.to_f } }
-    end
+    redirect_to camper_path(@camper), notice: "Purchase complete! $#{sprintf("%.2f", total)} charged."
   rescue => e
-    respond_to do |format|
-      format.html { redirect_to root_path, alert: "Checkout failed: #{e.message}" }
-      format.json { render json: { error: e.message }, status: :unprocessable_entity }
+    redirect_to camper_path(@camper), alert: "Checkout failed: #{e.message}"
+  end
+
+  def destroy
+    purchase = @camper.purchases.find(params[:id])
+    ActiveRecord::Base.transaction do
+      purchase.product.increment!(:quantity, purchase.quantity)
+      @camper.increment!(:balance, purchase.subtotal)
+      purchase.destroy!
     end
+    redirect_to camper_path(@camper), notice: "Purchase removed and balance restored."
+  rescue => e
+    redirect_to camper_path(@camper), alert: e.message
   end
 
   private

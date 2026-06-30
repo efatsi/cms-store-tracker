@@ -10,9 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_27_033204) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_30_191452) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "balance_adjustments", force: :cascade do |t|
+    t.decimal "amount", precision: 8, scale: 2
+    t.bigint "camper_id", null: false
+    t.datetime "created_at", null: false
+    t.text "notes"
+    t.datetime "updated_at", null: false
+    t.index ["camper_id"], name: "index_balance_adjustments_on_camper_id"
+  end
 
   create_table "campers", force: :cascade do |t|
     t.decimal "balance", precision: 8, scale: 2, default: "150.0", null: false
@@ -58,6 +67,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_27_033204) do
     t.index ["product_id"], name: "index_purchases_on_product_id"
   end
 
+  add_foreign_key "balance_adjustments", "campers"
   add_foreign_key "cart_items", "carts"
   add_foreign_key "cart_items", "products"
   add_foreign_key "carts", "campers"

@@ -1,0 +1,317 @@
+<div class="flex items-start justify-between mb-8">
+  <div>
+    <%= link_to "&larr; All Campers".html_safe, campers_path, class: "text-stone-500 hover:text-green-800 text-sm mb-2 inline-block transition-colors" %>
+    <h1 class="serif text-3xl font-bold text-stone-800"><%= @camper.name %></h1>
+  </div>
+  <div class="text-right bg-white border border-stone-200 rounded shadow-sm px-6 py-4">
+    <div class="flex items-center justify-end gap-2 mb-1">
+      <p class="text-xs uppercase tracking-widest text-stone-400">Balance</p>
+      <button onclick="openBalanceModal()" class="text-stone-400 hover:text-green-800 transition-colors" title="Adjust balance">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+        </svg>
+      </button>
+    </div>
+    <p class="serif text-4xl font-bold <%= @camper.balance < 0 ? "text-red-600" : "text-green-800" %>">
+      <%= @camper.balance < 0 ? "-" : "" %>$<%= number_with_precision(@camper.balance.abs, precision: 2) %>
+    </p>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <%# Store Items %>
+  <div class="lg:col-span-2">
+    <div class="bg-white rounded-md shadow-sm border border-stone-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-stone-200 flex items-center gap-3" style="background-color: #537326;">
+        <h2 class="serif text-lg font-semibold text-white flex-shrink-0">Store Items</h2>
+        <input type="text" placeholder="Search..." autofocus oninput="filterProducts(this.value)"
+          class="flex-1 px-3 py-1 text-sm rounded border-0 bg-white/20 text-white placeholder-white/60 focus:outline-none min-w-0">
+        <button onclick="openNewProductModal()"
+          class="flex-shrink-0 text-white text-xs font-semibold px-3 py-1 rounded border border-white/40 hover:bg-white/20 transition-colors">+ New</button>
+      </div>
+
+      <% if @products_by_section.empty? %>
+        <p class="px-5 py-6 text-stone-400 text-sm italic">No items available.</p>
+      <% else %>
+        <div id="product-list">
+          <% @products_by_section.each_with_index do |(section, products), i| %>
+            <div data-section class="<%= i > 0 ? "border-t border-stone-100" : "" %> px-5 py-4">
+              <h3 class="text-xs font-semibold uppercase tracking-widest text-green-800 mb-3"><%= section %></h3>
+              <div class="space-y-1">
+                <% products.each do |product| %>
+                  <div data-product-row data-name="<%= product.name.downcase %>"
+                       class="flex items-center justify-between py-2 px-3 rounded hover:bg-amber-50 transition-colors">
+                    <div>
+                      <span class="font-medium text-stone-800"><%= product.name %></span>
+                      <span class="text-sm text-stone-500 ml-2">$<%= number_with_precision(product.price, precision: 2) %></span>
+                      <span class="text-xs text-stone-400 ml-1">(<%= product.quantity %>)</span>
+                    </div>
+                    <%= button_to "+ Add", camper_cart_items_path(@camper),
+                        params: { product_id: product.id },
+                        style: "background-color: #4a7c3f;",
+                        class: "text-white text-xs font-semibold px-3 py-1 rounded tracking-wide cursor-pointer hover:opacity-90 transition-opacity" %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Cart + History %>
+  <div class="lg:col-span-1 flex flex-col gap-8 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto">
+    <%# Cart %>
+    <div class="bg-white rounded-md shadow-sm border border-stone-200">
+      <div class="px-5 py-4 border-b border-stone-200 rounded-t-md" style="background-color: #537326;">
+        <h2 class="serif text-lg font-semibold text-white">Cart</h2>
+      </div>
+      <% if @cart_items.empty? %>
+        <p class="px-5 py-6 text-stone-400 text-sm italic">Your cart is empty.</p>
+      <% else %>
+        <ul class="divide-y divide-stone-100">
+          <% @cart_items.each do |item| %>
+            <li class="px-4 py-3 flex items-center justify-between gap-2">
+              <span class="font-medium text-stone-800 flex-1 text-sm"><%= item.product.name %></span>
+              <div class="flex items-center gap-1">
+                <%= button_to "−", camper_cart_item_path(@camper, item),
+                    method: :patch, params: { direction: "down" },
+                    class: "w-6 h-6 flex items-center justify-center rounded border border-stone-300 text-stone-600 hover:bg-stone-100 font-bold leading-none transition-colors text-xs cursor-pointer" %>
+                <span class="w-5 text-center font-semibold text-stone-700 text-sm"><%= item.quantity %></span>
+                <%= button_to "+", camper_cart_item_path(@camper, item),
+                    method: :patch, params: { direction: "up" },
+                    class: "w-6 h-6 flex items-center justify-center rounded border border-stone-300 text-stone-600 hover:bg-stone-100 font-bold leading-none transition-colors text-xs cursor-pointer" %>
+              </div>
+              <span class="text-stone-700 text-xs w-12 text-right">$<%= number_with_precision(item.product.price * item.quantity, precision: 2) %></span>
+              <%= button_to "✕", camper_cart_item_path(@camper, item), method: :delete,
+                  class: "text-stone-300 hover:text-red-500 text-xs font-bold transition-colors",
+                  form: { data: { turbo_confirm: "Remove #{item.product.name} from cart?" } } %>
+            </li>
+          <% end %>
+        </ul>
+        <% cart_total = @cart_items.sum { |i| i.product.price * i.quantity } %>
+        <div class="px-4 py-3 border-t border-stone-200 bg-stone-50 rounded-b-md flex items-center justify-between">
+          <span class="font-semibold text-stone-700 text-sm">$<%= number_with_precision(cart_total, precision: 2) %></span>
+          <%= button_to "Checkout →", camper_purchases_path(@camper),
+              style: "background-color: #537326;",
+              class: "text-white font-semibold px-4 py-1.5 rounded text-xs tracking-wide transition-colors",
+              form: { data: { turbo_confirm: "Complete purchase for $#{number_with_precision(cart_total, precision: 2)}?" } } %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Purchase History %>
+    <div class="bg-white rounded-md shadow-sm border border-stone-200">
+      <div class="px-5 py-4 border-b border-stone-200 rounded-t-md" style="background-color: #537326;">
+        <h2 class="serif text-lg font-semibold text-white">Purchase History</h2>
+      </div>
+      <% history = (@purchases.map { |p| [:purchase, p] } + @balance_adjustments.map { |a| [:adjustment, a] }).sort_by { |_, r| r.created_at }.reverse %>
+      <% if history.empty? %>
+        <p class="px-5 py-6 text-stone-400 text-sm italic">No history yet.</p>
+      <% else %>
+        <ul class="divide-y divide-stone-100">
+          <% history.each do |type, record| %>
+            <% if type == :purchase %>
+              <li class="px-4 py-3">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex-1 min-w-0">
+                    <span class="font-medium text-stone-800 text-sm"><%= record.product.name %></span>
+                    <span class="text-xs text-stone-500 ml-1">&times; <%= record.quantity %></span>
+                  </div>
+                  <span class="text-stone-700 font-semibold text-sm">-$<%= number_with_precision(record.subtotal, precision: 2) %></span>
+                  <%= button_to "✕", camper_purchase_path(@camper, record), method: :delete,
+                      class: "text-stone-300 hover:text-red-500 text-xs font-bold transition-colors flex-shrink-0",
+                      form: { data: { turbo_confirm: "Remove this purchase? Balance and stock will be restored." } } %>
+                </div>
+                <p class="text-xs text-stone-400 mt-0.5"><%= record.created_at.strftime("%b %-d at %-I:%M %p") %></p>
+              </li>
+            <% else %>
+              <li class="px-4 py-3">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex-1 min-w-0">
+                    <span class="font-medium text-stone-800 text-sm">Balance adjustment</span>
+                    <% if record.notes.present? %>
+                      <p class="text-xs text-stone-500 mt-0.5"><%= record.notes %></p>
+                    <% end %>
+                  </div>
+                  <span class="font-semibold text-sm <%= record.amount >= 0 ? "text-green-700" : "text-red-500" %>">
+                    <%= record.amount >= 0 ? "+" : "-" %>$<%= number_with_precision(record.amount.abs, precision: 2) %>
+                  </span>
+                  <%= button_to "✕", camper_balance_adjustment_path(@camper, record), method: :delete,
+                      class: "text-stone-300 hover:text-red-500 text-xs font-bold transition-colors flex-shrink-0",
+                      form: { data: { turbo_confirm: "Remove this balance adjustment?" } } %>
+                </div>
+                <p class="text-xs text-stone-400 mt-0.5"><%= record.created_at.strftime("%b %-d at %-I:%M %p") %></p>
+              </li>
+            <% end %>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<%# Balance Adjustment Modal %>
+<div id="balance-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+    <div class="px-6 py-4 border-b border-stone-200" style="background-color: #537326;">
+      <h2 class="serif text-lg font-semibold text-white">Adjust Balance</h2>
+    </div>
+    <%= form_with url: camper_balance_adjustments_path(@camper), method: :post, id: "balance-form", class: "px-6 py-5 space-y-4" do |f| %>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-widest text-stone-500 mb-2">Direction</label>
+        <div class="flex gap-2">
+          <label class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded border cursor-pointer transition-colors has-[:checked]:border-green-700 has-[:checked]:bg-green-50 border-stone-300">
+            <input type="radio" name="direction" value="increase" checked class="accent-green-700">
+            <span class="text-sm font-medium text-stone-700">Increase</span>
+          </label>
+          <label class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded border cursor-pointer transition-colors has-[:checked]:border-red-400 has-[:checked]:bg-red-50 border-stone-300">
+            <input type="radio" name="direction" value="decrease" class="accent-red-500">
+            <span class="text-sm font-medium text-stone-700">Decrease</span>
+          </label>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-widest text-stone-500 mb-1">Amount ($)</label>
+        <input name="amount" type="number" step="0.01" min="0.01" placeholder="0.00" required
+          class="w-full px-3 py-2 border border-stone-300 rounded text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-700">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-widest text-stone-500 mb-1">Notes <span class="normal-case font-normal text-stone-400">(optional)</span></label>
+        <input name="notes" type="text" placeholder="e.g. Added by parent"
+          class="w-full px-3 py-2 border border-stone-300 rounded text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-700">
+      </div>
+      <div class="flex justify-end gap-3 pt-1">
+        <button type="button" onclick="closeBalanceModal()" class="px-4 py-2 text-sm text-stone-600 hover:text-stone-800 transition-colors">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-sm text-white font-semibold rounded transition-colors" style="background-color: #537326;">Save</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<%# New Product Modal %>
+<div id="new-product-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+    <div class="px-6 py-4 border-b border-stone-200" style="background-color: #537326;">
+      <h2 class="serif text-lg font-semibold text-white">New Product</h2>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <div id="new-product-error" class="hidden bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded text-sm"></div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-widest text-stone-500 mb-1">Product Name</label>
+        <input id="np-name" type="text" placeholder="e.g. Candy Bar"
+          class="w-full px-3 py-2 border border-stone-300 rounded text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-700">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-widest text-stone-500 mb-1">Price ($)</label>
+        <input id="np-price" type="number" step="0.01" min="0.01" placeholder="0.00"
+          class="w-full px-3 py-2 border border-stone-300 rounded text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-700">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-widest text-stone-500 mb-1">Quantity</label>
+        <input id="np-quantity" type="number" step="1" min="0" value="999"
+          class="w-full px-3 py-2 border border-stone-300 rounded text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-700">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-widest text-stone-500 mb-1">Section</label>
+        <input id="np-section" type="text" placeholder="e.g. Snacks"
+          class="w-full px-3 py-2 border border-stone-300 rounded text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-700">
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-stone-100 flex justify-end gap-3">
+      <button onclick="closeNewProductModal()" class="px-4 py-2 text-sm text-stone-600 hover:text-stone-800 transition-colors">Cancel</button>
+      <button id="np-submit" onclick="submitNewProduct()"
+        class="px-4 py-2 text-sm text-white font-semibold rounded transition-colors"
+        style="background-color: #537326;">Add Product</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openNewProductModal() {
+    document.getElementById("new-product-modal").classList.remove("hidden")
+    document.getElementById("np-name").focus()
+  }
+
+  function closeNewProductModal() {
+    document.getElementById("new-product-modal").classList.add("hidden")
+    document.getElementById("new-product-error").classList.add("hidden")
+    ["np-name", "np-price", "np-section"].forEach(id => document.getElementById(id).value = "")
+    document.getElementById("np-quantity").value = "999"
+  }
+
+  async function submitNewProduct() {
+    const name = document.getElementById("np-name").value.trim()
+    const price = document.getElementById("np-price").value.trim()
+    const quantity = document.getElementById("np-quantity").value.trim()
+    const section = document.getElementById("np-section").value.trim()
+    const errorEl = document.getElementById("new-product-error")
+
+    errorEl.classList.add("hidden")
+    const btn = document.getElementById("np-submit")
+    btn.textContent = "Saving..."
+    btn.disabled = true
+
+    try {
+      const resp = await fetch("/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-CSRF-Token": document.querySelector("meta[name='csrf-token']").content
+        },
+        body: JSON.stringify({ product: { name, price, quantity, section } })
+      })
+      const data = await resp.json()
+      if (!resp.ok) {
+        errorEl.textContent = data.error || "Failed to add product"
+        errorEl.classList.remove("hidden")
+        btn.textContent = "Add Product"
+        btn.disabled = false
+        return
+      }
+      window.location.reload()
+    } catch {
+      errorEl.textContent = "Something went wrong"
+      errorEl.classList.remove("hidden")
+      btn.textContent = "Add Product"
+      btn.disabled = false
+    }
+  }
+
+  document.getElementById("new-product-modal").addEventListener("click", function(e) {
+    if (e.target === this) closeNewProductModal()
+  })
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") { closeNewProductModal(); closeBalanceModal() }
+  })
+
+  function openBalanceModal() {
+    document.getElementById("balance-modal").classList.remove("hidden")
+    document.querySelector("#balance-form input[name='amount']").focus()
+  }
+
+  function closeBalanceModal() {
+    document.getElementById("balance-modal").classList.add("hidden")
+    document.querySelector("#balance-form input[name='amount']").value = ""
+    document.querySelector("#balance-form input[name='notes']").value = ""
+    document.querySelector("#balance-form input[value='increase']").checked = true
+  }
+
+  document.getElementById("balance-modal").addEventListener("click", function(e) {
+    if (e.target === this) closeBalanceModal()
+  })
+
+  function filterProducts(q) {
+    q = q.toLowerCase()
+    document.querySelectorAll("[data-product-row]").forEach(row => {
+      row.classList.toggle("hidden", !row.dataset.name.includes(q))
+    })
+    document.querySelectorAll("[data-section]").forEach(section => {
+      const hasVisible = [...section.querySelectorAll("[data-product-row]")].some(r => !r.classList.contains("hidden"))
+      section.classList.toggle("hidden", !hasVisible)
+    })
+  }
+</script>
