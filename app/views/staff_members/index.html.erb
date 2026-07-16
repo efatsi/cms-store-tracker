@@ -1,0 +1,102 @@
+<div class="no-print">
+  <div class="mb-6 flex items-end justify-between">
+    <div>
+      <h1 class="serif text-3xl font-bold text-stone-800 mb-1">Staff</h1>
+      <p class="text-stone-500 text-sm">Camp staff members.</p>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="window.print()"
+              class="text-sm font-semibold px-4 py-2 rounded shadow-sm border border-stone-300 text-stone-600 hover:bg-stone-50 transition-colors">
+        Print Balances
+      </button>
+      <button onclick="document.getElementById('new-staff-form').classList.toggle('hidden')"
+              style="background-color: #537326;"
+              class="text-white text-sm font-semibold px-4 py-2 rounded shadow-sm hover:opacity-90 transition-opacity">
+        + New Staff
+      </button>
+    </div>
+  </div>
+
+  <div id="new-staff-form" class="hidden mb-4">
+    <%= form_with model: @new_staff_member, url: staff_members_path, class: "flex gap-2 items-start" do |f| %>
+      <div class="flex-1">
+        <%= f.text_field :name, placeholder: "Full name", autofocus: true,
+            class: "w-full px-4 py-2 border border-stone-300 rounded shadow-sm bg-white text-stone-800 placeholder-stone-400 focus:outline-none text-sm" %>
+        <% if @new_staff_member.errors[:name].any? %>
+          <p class="text-red-600 text-xs mt-1"><%= @new_staff_member.errors[:name].first %></p>
+        <% end %>
+      </div>
+      <%= f.submit "Add Staff Member", style: "background-color: #537326;",
+          class: "text-white text-sm font-semibold px-4 py-2 rounded shadow-sm hover:opacity-90 transition-opacity cursor-pointer" %>
+      <button type="button" onclick="document.getElementById('new-staff-form').classList.add('hidden')"
+              class="text-stone-500 text-sm px-3 py-2 rounded hover:bg-stone-100 transition-colors">
+        Cancel
+      </button>
+    <% end %>
+  </div>
+
+  <div class="mb-4">
+    <input type="text" placeholder="Search staff..." autofocus
+      oninput="filterStaff(this.value)"
+      class="w-full px-4 py-2 border border-stone-300 rounded shadow-sm bg-white text-stone-800 placeholder-stone-400 focus:outline-none text-sm">
+  </div>
+
+  <div class="bg-white rounded-md shadow-sm border border-stone-200 overflow-hidden">
+    <table class="min-w-full divide-y divide-stone-200">
+      <thead>
+        <tr style="background-color: #537326;">
+          <th class="px-6 py-3 text-left text-xs font-semibold text-stone-300 uppercase tracking-widest">Name</th>
+          <th class="px-6 py-3 text-right text-xs font-semibold text-stone-300 uppercase tracking-widest">Amount Purchased</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-stone-100">
+        <% if @staff_members.empty? %>
+          <tr>
+            <td colspan="2" class="px-6 py-6 text-center text-stone-400 text-sm">No staff members yet. Click "+ New Staff" to add one.</td>
+          </tr>
+        <% else %>
+          <% @staff_members.each do |member| %>
+            <tr data-name="<%= member.name.downcase %>" class="hover:bg-amber-50 transition-colors cursor-pointer"
+                onclick="window.location='<%= staff_member_path(member) %>'">
+              <td class="px-6 py-4 font-semibold text-stone-700"><%= member.name %></td>
+              <td class="px-6 py-4 text-right font-semibold text-stone-700">$<%= number_with_precision(member.purchased_amount, precision: 2) %></td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if @new_staff_member.errors.any? %>
+    <script>document.getElementById('new-staff-form').classList.remove('hidden')</script>
+  <% end %>
+
+  <script>
+    function filterStaff(q) {
+      q = q.toLowerCase()
+      document.querySelectorAll("tr[data-name]").forEach(row => {
+        row.classList.toggle("hidden", !row.dataset.name.includes(q))
+      })
+    }
+  </script>
+</div>
+
+<div class="print-only hidden">
+  <h1 style="font-family: 'Lora', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Staff Purchases</h1>
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+    <thead>
+      <tr style="border-bottom: 2px solid #333;">
+        <th style="text-align: left; padding: 6px 12px;">Staff Member</th>
+        <th style="text-align: right; padding: 6px 12px;">Amount Purchased</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @staff_members.each do |member| %>
+        <tr style="border-bottom: 1px solid #ddd;">
+          <td style="padding: 5px 12px;"><%= member.name %></td>
+          <td style="text-align: right; padding: 5px 12px;">$<%= number_with_precision(member.purchased_amount, precision: 2) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

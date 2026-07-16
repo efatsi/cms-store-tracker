@@ -11,5 +11,10 @@ Rails.application.routes.draw do
     resources :balance_adjustments, only: [:create, :destroy]
   end
 
+  resources :staff_members, path: 'staff', only: [:index, :show, :create] do
+    resources :cart_items, only: [:create, :update, :destroy], module: :staff
+    resources :purchases, only: [:create, :destroy], module: :staff
+  end
+
   resources :products, only: [:index, :new, :create, :edit, :update, :destroy]
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_30_191452) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_16_181817) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,10 +41,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_191452) do
   end
 
   create_table "carts", force: :cascade do |t|
-    t.bigint "camper_id", null: false
+    t.bigint "camper_id"
     t.datetime "created_at", null: false
+    t.bigint "staff_member_id"
     t.datetime "updated_at", null: false
     t.index ["camper_id"], name: "index_carts_on_camper_id"
+    t.index ["staff_member_id"], name: "index_carts_on_staff_member_id"
   end
 
   create_table "products", force: :cascade do |t|
@@ -57,20 +59,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_191452) do
   end
 
   create_table "purchases", force: :cascade do |t|
-    t.bigint "camper_id", null: false
+    t.bigint "camper_id"
     t.datetime "created_at", null: false
     t.decimal "price_at_purchase", precision: 8, scale: 2, null: false
     t.bigint "product_id", null: false
     t.integer "quantity"
+    t.bigint "staff_member_id"
     t.datetime "updated_at", null: false
     t.index ["camper_id"], name: "index_purchases_on_camper_id"
     t.index ["product_id"], name: "index_purchases_on_product_id"
+    t.index ["staff_member_id"], name: "index_purchases_on_staff_member_id"
+  end
+
+  create_table "staff_members", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.datetime "updated_at", null: false
   end
 
   add_foreign_key "balance_adjustments", "campers"
   add_foreign_key "cart_items", "carts"
   add_foreign_key "cart_items", "products"
   add_foreign_key "carts", "campers"
+  add_foreign_key "carts", "staff_members"
   add_foreign_key "purchases", "campers"
   add_foreign_key "purchases", "products"
+  add_foreign_key "purchases", "staff_members"
 end

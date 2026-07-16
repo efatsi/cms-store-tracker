@@ -1,5 +1,6 @@
 class Purchase < ApplicationRecord
-  belongs_to :camper
+  belongs_to :camper, optional: true
+  belongs_to :staff_member, optional: true
   belongs_to :product
 
   validates :quantity, presence: true, numericality: { greater_than: 0 }
