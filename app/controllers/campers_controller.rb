@@ -15,13 +15,14 @@ class CampersController < ApplicationController
   def purchase_history_csv
     campers = Camper.includes(purchases: :product).order(:name)
     csv = CSV.generate(headers: true) do |row|
-      row << ["Camper / Item", "Qty", "Price"]
+      row << ["Camper", "Item", "Qty", "Price"]
       campers.each do |camper|
         purchases = camper.purchases.sort_by(&:created_at)
         next if purchases.empty?
-        row << [camper.name, nil, nil]
+        total = purchases.sum(&:subtotal).round(2)
+        row << [camper.name, nil, nil, total]
         purchases.each do |p|
-          row << [p.product.name, p.quantity, p.price_at_purchase.round(2)]
+          row << [nil, p.product.name, p.quantity, p.price_at_purchase.round(2)]
         end
       end
     end
