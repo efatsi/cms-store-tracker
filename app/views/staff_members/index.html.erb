@@ -9,6 +9,9 @@
               class="text-sm font-semibold px-4 py-2 rounded shadow-sm border border-stone-300 text-stone-600 hover:bg-stone-50 transition-colors">
         Print Balances
       </button>
+      <%= link_to "Download CSV", balances_csv_staff_members_path,
+            class: "text-sm font-semibold px-4 py-2 rounded shadow-sm border border-stone-300 text-stone-600 hover:bg-stone-50 transition-colors",
+            data: { turbo: false } %>
       <button onclick="document.getElementById('new-staff-form').classList.toggle('hidden')"
               style="background-color: #537326;"
               class="text-white text-sm font-semibold px-4 py-2 rounded shadow-sm hover:opacity-90 transition-opacity">

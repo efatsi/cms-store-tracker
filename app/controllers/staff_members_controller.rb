@@ -4,11 +4,21 @@ class StaffMembersController < ApplicationController
     @new_staff_member = StaffMember.new
   end
 
+  def balances_csv
+    members = StaffMember.order(:name).includes(:purchases)
+    csv = CSV.generate(headers: true) do |row|
+      row << ["Staff Member", "Amount Purchased"]
+      members.each { |m| row << [m.name, m.purchased_amount.round(2)] }
+    end
+    send_data csv, filename: "staff-purchases-#{Date.current}.csv", type: "text/csv"
+  end
+
   def show
     @staff_member = StaffMember.find(params[:id])
     @products_by_section = Product.order(:section, :name).group_by(&:section)
     @cart_items = @staff_member.cart_or_create.cart_items.includes(:product)
     @purchases = @staff_member.purchases.includes(:product).order(created_at: :desc)
+    @balance_adjustments = @staff_member.staff_balance_adjustments.order(created_at: :desc)
   end
 
   def create
