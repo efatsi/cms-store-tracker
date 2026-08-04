@@ -197,7 +197,7 @@
           ${data.purchases.map(p => `
             <li class="px-6 py-3 flex items-center justify-between gap-4">
               <div>
-                <a href="/campers/${p.camper_id}" class="font-medium text-green-700 hover:underline text-sm">${p.camper_name}</a>
+                <a href="${p.is_staff ? `/staff/${p.camper_id.toString().replace('staff_', '')}` : `/campers/${p.camper_id}`}" class="font-medium text-green-700 hover:underline text-sm">${p.camper_name}${p.is_staff ? ' <span class="text-stone-400 font-normal">(Staff)</span>' : ''}</a>
                 <p class="text-xs text-stone-400">${p.created_at}</p>
               </div>
               <div class="text-right flex-shrink-0">
