@@ -26,11 +26,23 @@ class ProductsController < ApplicationController
   def edit; end
 
   def update
-    if @product.update(product_params)
-      redirect_to products_path, notice: "\"#{@product.name}\" updated."
-    else
-      render :edit, status: :unprocessable_entity
+    old_price = @product.price
+
+    ActiveRecord::Base.transaction do
+      @product.update!(product_params)
+
+      if @product.price != old_price
+        @product.purchases.includes(:camper).each do |purchase|
+          balance_delta = (old_price - @product.price) * purchase.quantity
+          purchase.update_column(:price_at_purchase, @product.price)
+          purchase.camper.increment!(:balance, balance_delta) if purchase.camper
+        end
+      end
     end
+
+    redirect_to products_path, notice: "\"#{@product.name}\" updated."
+  rescue ActiveRecord::RecordInvalid
+    render :edit, status: :unprocessable_entity
   end
 
   def destroy
